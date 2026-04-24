@@ -23,9 +23,12 @@ export async function get_github_info(username: string) {
       followers: userData.followers,
       top_recent_repos: reposData.map((repo) => ({
         name: repo.name,
+        is_fork: repo.fork,
         description: repo.description,
-        language: repo.language,
-        stars: repo.stargazers_count
+        primary_language: repo.language,
+        size_kb: repo.size,
+        stars: repo.stargazers_count,
+        last_updated: repo.pushed_at || repo.updated_at
       }))
     };
   } catch (error) {
@@ -39,6 +42,7 @@ export async function get_linkedin_info(url: string) {
     note: "LinkedIn data extraction requires official API access. Use the URL to verify candidate identity manually."
   };
 }
+
 export const tools: Tool[] = [
   {
     functionDeclarations: [
