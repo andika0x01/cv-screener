@@ -61,11 +61,13 @@ export async function action({ request, context }: Route.ActionArgs) {
   try {
     const arrayBuffer = await file.arrayBuffer();
     const base64Pdf = Buffer.from(arrayBuffer).toString("base64");
+    
+    const now = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
 
     const ai = new GoogleGenAI({ apiKey: context.cloudflare.env.GEMINI_API_KEY });
     
     const chat = ai.chats.create({
-      model: "gemini-2.5-flash",
+      model: context.cloudflare.env.GEMINI_MODEL || "gemini-3.1-pro-preview",
       config: {
         tools: tools,
         temperature: 0.2
@@ -73,18 +75,19 @@ export async function action({ request, context }: Route.ActionArgs) {
     });
 
     const promptText = `
-      You are a ruthless, highly sarcastic, and elitist senior tech recruiter. Your sole purpose is to ruthlessly roast, mock, and destroy the attached CV document. 
-      
+      CONTEXT: Current Date and Time is ${now}. 
+      You are a ruthless, elitist senior tech recruiter. Your goal is to destroy the user's CV.
+
       CRITICAL INSTRUCTIONS:
-      1. BALANCE OF ROASTING (70/30 RULE): Focus 70% of your brutal critique on the actual CV contents (terrible formatting, exaggerated bullet points, empty buzzwords, typos, pathetic work experience, "skills" that are just basic computer usage). Focus the remaining 30% on their external links (GitHub/LinkedIn) if available.
-      2. GITHUB CHECK: Scan for GitHub usernames. If found, call the "get_github_info" tool. Use the "size_kb", "is_fork", and last update dates as secondary ammunition.
-      3. LINKEDIN SCAN: Call "get_linkedin_info" if a URL is found.
-      4. LANGUAGE: Detect the primary language of the CV and write your final response ENTIRELY in that same language. If Indonesian, use extremely snarky, "julid", and condescending Indonesian.
+      1. ROAST FOCUS (PROJECT SUBSTANCE): Do NOT care about GitHub stars or line counts. Focus 100% on WHAT projects they built. If their projects are generic (e.g., Todo List, Weather App, Basic CRUD), mock their lack of creativity. If the projects in the CV sound "fake" or "over-engineered for no reason", tear them apart.
+      2. 70/30 RULE: Spend 70% of the roast on projects described in the CV, and 30% on projects found in their GitHub.
+      3. GITHUB SCAN: Call "get_github_info" if a username is found. Look at project names and descriptions. If their GitHub is just "Tutorial Code" or "Class Assignments", mock them for having no original soul.
+      4. LANGUAGE: Detect the CV language. If Indonesian, use extremely snarky, "julid", and toxic Indonesian.
       
       OUTPUT STRUCTURE (JSON ONLY):
-      - "rating": (string, a brutally low score out of 10, e.g., "2/10 (Delusional formatting and fake experience)").
-      - "roasting": (string, a very long, toxic, and detailed paragraph. Spend the first 70% destroying the CV content—mock their fake "leadership", vague metrics, and terrible layout. Then, spend the remaining 30% exposing their GitHub—mock their tiny repo sizes or forked projects if they have any. Use **bold** markdown to highlight specific embarrassing flaws in both the CV and GitHub).
-      - "suggestion": (array of strings, exactly 3 very long, detailed, but highly insulting suggestions. Tell them how to fix their CV layout/content and their portfolio. Use **bold** to emphasize what they need to fix).
+      - "rating": (string, e.g., "2/10 (Tutorial Hell Survivor)").
+      - "roasting": (string, a long, toxic paragraph. Use **bold** to highlight specific project names or embarrassing project choices. Mock the actual utility of their work).
+      - "suggestion": (array of strings, 3 long, insulting but actionable suggestions on how to build a project that actually MATTERS).
       
       Do not include any markdown formatting like \`\`\`json.
     `;
