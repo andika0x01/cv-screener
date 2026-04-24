@@ -6,7 +6,8 @@ export async function get_github_info(username: string) {
       fetch(`https://api.github.com/users/${username}`, {
         headers: { "User-Agent": "CV-Screener-App" }
       }),
-      fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=5`, {
+      // Ubah per_page menjadi 20
+      fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=20`, {
         headers: { "User-Agent": "CV-Screener-App" }
       })
     ]);
@@ -30,20 +31,11 @@ export async function get_github_info(username: string) {
       updated_at: userData.updated_at,
       top_recent_repos: reposData.map((repo) => ({
         name: repo.name,
-        full_name: repo.full_name,
-        html_url: repo.html_url,
         description: repo.description,
         fork: repo.fork,
-        homepage: repo.homepage,
         size: repo.size,
-        stargazers_count: repo.stargazers_count,
-        watchers_count: repo.watchers_count,
         language: repo.language,
-        open_issues_count: repo.open_issues_count,
-        topics: repo.topics,
-        created_at: repo.created_at,
-        updated_at: repo.updated_at,
-        pushed_at: repo.pushed_at
+        stars: repo.stargazers_count
       }))
     };
   } catch (error) {
@@ -58,7 +50,6 @@ export async function get_linkedin_info(url: string) {
   };
 }
 
-// Definisi tools untuk Google GenAI menggunakan Enum bawaan
 export const tools: Tool[] = [
   {
     functionDeclarations: [
