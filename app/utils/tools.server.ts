@@ -6,7 +6,7 @@ export async function get_github_info(username: string) {
       fetch(`https://api.github.com/users/${username}`, {
         headers: { "User-Agent": "CV-Screener-App" }
       }),
-      fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=15`, {
+      fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=5`, {
         headers: { "User-Agent": "CV-Screener-App" }
       })
     ]);
@@ -17,18 +17,33 @@ export async function get_github_info(username: string) {
     const reposData = (await reposRes.json()) as Array<Record<string, any>>;
 
     return {
+      login: userData.login,
       name: userData.name,
+      company: userData.company,
+      blog: userData.blog,
+      location: userData.location,
       bio: userData.bio,
       public_repos: userData.public_repos,
       followers: userData.followers,
+      following: userData.following,
+      created_at: userData.created_at,
+      updated_at: userData.updated_at,
       top_recent_repos: reposData.map((repo) => ({
         name: repo.name,
-        is_fork: repo.fork,
+        full_name: repo.full_name,
+        html_url: repo.html_url,
         description: repo.description,
-        primary_language: repo.language,
-        size_kb: repo.size,
-        stars: repo.stargazers_count,
-        last_updated: repo.pushed_at || repo.updated_at
+        fork: repo.fork,
+        homepage: repo.homepage,
+        size: repo.size,
+        stargazers_count: repo.stargazers_count,
+        watchers_count: repo.watchers_count,
+        language: repo.language,
+        open_issues_count: repo.open_issues_count,
+        topics: repo.topics,
+        created_at: repo.created_at,
+        updated_at: repo.updated_at,
+        pushed_at: repo.pushed_at
       }))
     };
   } catch (error) {
@@ -43,6 +58,7 @@ export async function get_linkedin_info(url: string) {
   };
 }
 
+// Definisi tools untuk Google GenAI menggunakan Enum bawaan
 export const tools: Tool[] = [
   {
     functionDeclarations: [
