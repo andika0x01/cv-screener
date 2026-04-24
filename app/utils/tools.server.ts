@@ -6,7 +6,7 @@ export async function get_github_info(username: string) {
       fetch(`https://api.github.com/users/${username}`, {
         headers: { "User-Agent": "CV-Screener-App" }
       }),
-      fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=5`, {
+      fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=15`, {
         headers: { "User-Agent": "CV-Screener-App" }
       })
     ]);
