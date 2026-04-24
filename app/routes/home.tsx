@@ -1,4 +1,4 @@
-import { Form, useNavigation, data } from "react-router";
+import { Form, useNavigation, data, useActionData } from "react-router";
 import type { Route } from "./+types/home";
 import { getSession, commitSession } from "~/sessions.server";
 import { GoogleGenAI } from "@google/genai";
@@ -6,6 +6,21 @@ import { Buffer } from "node:buffer";
 import { useState } from "react";
 
 import { get_github_info, get_linkedin_info, tools } from "~/utils/tools.server";
+
+// Helper untuk merender **teks** menjadi highlight
+function formatText(text: string) {
+  if (!text) return text;
+  const parts = text.split(/\*\*(.*?)\*\*/g);
+  return parts.map((part, i) => 
+    i % 2 === 1 ? (
+      <span key={i} className="text-[#E61919] font-black bg-[#E61919]/10 px-1">
+        {part}
+      </span>
+    ) : (
+      part
+    )
+  );
+}
 
 export function meta() {
   return [{ title: "CV Screener" }];
@@ -58,15 +73,18 @@ export async function action({ request, context }: Route.ActionArgs) {
     });
 
     const promptText = `
-      You are a ruthless, highly sarcastic, and elitist senior tech recruiter. Your sole purpose is to ruthlessly roast, mock, and destroy the attached CV document. Analyze it thoroughly to find every pathetic flaw.
+      You are a ruthless, highly sarcastic, and elitist senior tech recruiter. Your sole purpose is to ruthlessly roast, mock, and destroy the attached CV document. 
       
       CRITICAL INSTRUCTIONS:
-      1. Scan the document for any GitHub usernames or LinkedIn URLs. If found, call the provided tools to fetch external data so you can mock their actual portfolio too.
-      2. Detect the primary language of the CV and write your final response ENTIRELY in that same language. If it's Indonesian, be extremely snarky, sarcastic, and "julid".
-      3. You MUST return ONLY a valid JSON object with exactly these keys:
-         "rating": (string, give a brutally low score out of 10, e.g., "2/10 (Delusional)"),
-         "roasting": (string, a very long, highly sarcastic, and mocking paragraph. At least 5-8 sentences. Tear apart their formatting, empty buzzwords, pathetic experience, and the overall audacity of submitting this garbage. Make it personal to the contents of their CV),
-         "suggestion": (array of strings, exactly 3 very long, detailed, actionable but highly condescending suggestions. Tell them exactly what to fix, but phrase it as if you are explaining basic common sense to an absolute amateur).
+      1. REPOSITORY FOCUS: Scan the document for GitHub usernames. If found, YOU MUST call the "get_github_info" tool. Analyze their actual code, top languages, and repo activity. Use this data as the main weapon for your roast. If their repos are empty, low-star, or just forks, mock them relentlessly for it.
+      2. LINKEDIN SCAN: Call "get_linkedin_info" if a URL is found.
+      3. LANGUAGE: Detect the primary language of the CV and write your final response ENTIRELY in that same language. If Indonesian, use extremely snarky, "julid", and condescending Indonesian.
+      
+      OUTPUT STRUCTURE (JSON ONLY):
+      - "rating": (string, a brutally low score out of 10, e.g., "1.5/10 (Repository is a ghost town)").
+      - "roasting": (string, a very long, toxic, and detailed paragraph. Specifically target their project repositories. Mock their lack of commits, generic repo names, or the fact that they have 0 stars. Compare their big claims in the CV with the actual "trash" found in their GitHub. Use **bold** markdown to highlight specific project names, missing skills, or the most embarrassing flaws).
+      - "suggestion": (array of strings, exactly 3 very long, detailed, but highly insulting suggestions. Focus heavily on how they should actually build real projects or clean up their messy code if they ever want to be hired by anyone with taste. Use **bold** to emphasize what they need to fix).
+      
       Do not include any markdown formatting like \`\`\`json.
     `;
 
@@ -229,7 +247,9 @@ export default function Home({ loaderData, actionData }: Route.ComponentProps) {
 
                     <div>
                       <h3 className="text-[#E61919] font-bold text-xs mb-2">/// ROASTING</h3>
-                      <p className="text-sm leading-relaxed uppercase">{result.roasting}</p>
+                      <p className="text-sm leading-relaxed uppercase">
+                        {formatText(result.roasting)}
+                      </p>
                     </div>
 
                     <div>
@@ -238,7 +258,7 @@ export default function Home({ loaderData, actionData }: Route.ComponentProps) {
                         {Array.isArray(result.suggestion) && result.suggestion.map((item: string, idx: number) => (
                           <li key={idx} className="flex gap-4 text-sm leading-relaxed border-l-2 border-[#050505] pl-3">
                             <span className="font-bold opacity-50">0{idx + 1}</span>
-                            <span className="uppercase">{item}</span>
+                            <span className="uppercase">{formatText(item)}</span>
                           </li>
                         ))}
                       </ul>
